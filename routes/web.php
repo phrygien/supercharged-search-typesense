@@ -81,6 +81,7 @@ Route::get('/searching-collection', function () {
         'query_by' => 'title',
         //'sort_by' => '_text_match:desc, ratings_count:desc',
         'sort_by' => '_text_match:desc',
+        'per_page' => 3,
     ]);
 
     $title = collect($results['hits'])->map(fn($shit) => $shit['document']['title']);
