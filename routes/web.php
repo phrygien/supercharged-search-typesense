@@ -78,8 +78,12 @@ Route::get('/searching-collection', function () {
 
     $results = $client->collections['books']->documents->search([
         'q' => request('q'),
-        'query_by' => 'title,authors',
+        'query_by' => 'title',
+        //'sort_by' => '_text_match:desc, ratings_count:desc',
+        'sort_by' => '_text_match:desc',
     ]);
 
-    dd($results);
+    $title = collect($results['hits'])->map(fn($shit) => $shit['document']['title']);
+
+    return $title;
 });
