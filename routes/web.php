@@ -14,7 +14,7 @@ Route::get('/create-collection', function (Client $client) {
         'fields' => [
             // title, author, publication_year, ratings_count, average_rating
             ['name' => 'title', 'type' => 'string'],
-            ['name' => 'authors', 'type' => 'string[]'],
+            ['name' => 'authors', 'type' => 'string[]', 'facet' => true],
             ['name' => 'publication_year', 'type' => 'int32'],
             ['name' => 'ratings_count', 'type' => 'int32'],
             ['name' => 'average_rating', 'type' => 'float'],
@@ -66,6 +66,19 @@ Route::get('/filter-search', function (Client $client) {
         //'filter_by' => 'publication_year:=[2000..2010]', // range
         //'filter_by' => 'authors:=Blake Crouch', // OR || AND &&
         'filter_by' => 'id:[5,12,20]',
+    ]);
+
+    return $results;
+});
+
+Route::get('/faceting', function (Client $client) {
+
+    $results = $client->collections['books']->documents->search([
+        'q' => request('q'),
+        'query_by' => 'title',
+        'sort_by' => '_text_match:desc,ratings_count:desc',
+        'per_page' => 50,
+        'facet_by' => 'authors',
     ]);
 
     return $results;
