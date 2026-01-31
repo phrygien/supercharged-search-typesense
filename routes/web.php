@@ -8,78 +8,17 @@ Route::get('/welcome', function () {
     return view('welcome');
 });
 
-Route::get('/create-collection', function (Client $client) {
-    $bookSchema = [
-        'name' => 'books',
-        'fields' => [
-            // title, author, publication_year, ratings_count, average_rating
-            ['name' => 'title', 'type' => 'string'],
-            ['name' => 'authors', 'type' => 'string[]', 'facet' => true],
-            ['name' => 'publication_year', 'type' => 'int32'],
-            ['name' => 'ratings_count', 'type' => 'int32'],
-            ['name' => 'average_rating', 'type' => 'float'],
-        ],
-        'default_sorting_field' => 'ratings_count',
-    ];
-
-    // delete existing collection before
-    $client->collections['books']->delete();
-
-    // create collections bookschema
-    $client->collections->create($bookSchema);
-
-    return 'Collection created successfully';
-});
-
-Route::get('/import-collection', function (Client $client) {
-
-    $books = file_get_contents(base_path('books.jsonl'));
-
-    $response = $client->collections['books']->documents->import($books);
-
-    return 'Books imported successfully';
-});
-
-Route::get('/searching-collection', function (Client $client) {
+Route::get('/search', function (Client $client) {
+    $query = request('q', '*');
 
     $results = $client->collections['books']->documents->search([
-        'q' => request('q'),
-        'query_by' => 'title',
-        //'sort_by' => '_text_match:desc, ratings_count:desc',
-        'sort_by' => '_text_match:desc',
-        'per_page' => 50,
+        'q' => $query,
+        'query_by' => 'title'
     ]);
 
-    $title = collect($results['hits'])->map(fn($shit) => $shit['document']['title']);
+    $results = collect($results['hits'])->pluck('document.title'); // Extract documents from the data
 
-    return $title;
-});
-
-Route::get('/filter-search', function (Client $client) {
-
-    $results = $client->collections['books']->documents->search([
-        'q' => request('q'),
-        'query_by' => 'title',
-        'sort_by' => '_text_match:desc,ratings_count:desc',
-        'per_page' => 50,
-        //'filter_by' => 'publication_year:=2000',
-        //'filter_by' => 'publication_year:=[2000..2010]', // range
-        //'filter_by' => 'authors:=Blake Crouch', // OR || AND &&
-        'filter_by' => 'id:[5,12,20]',
+    return view('search', [
+        'results' => $results
     ]);
-
-    return $results;
-});
-
-Route::get('/faceting', function (Client $client) {
-
-    $results = $client->collections['books']->documents->search([
-        'q' => request('q'),
-        'query_by' => 'title',
-        'sort_by' => '_text_match:desc,ratings_count:desc',
-        'per_page' => 50,
-        'facet_by' => 'authors',
-    ]);
-
-    return $results;
 });
