@@ -16,7 +16,7 @@ Route::get('/search', function (Client $client) {
         'query_by' => 'title'
     ]);
 
-    $results = collect($results['hits'])->pluck('document.title'); // Extract documents from the data
+    $results = collect($results['hits'])->pluck('highlights')->flatten(1)->pluck('snippet'); // Extract documents from the data
 
     return view('search', [
         'results' => $results
